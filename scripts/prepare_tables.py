@@ -5,26 +5,12 @@ import pandas as pd
 # ---------------------------------------------------
 
 df = pd.read_parquet(
-    r"C:\Users\User\OneDrive\Desktop\Assignment\team_3.parquet"
+    r"C:\Users\User\OneDrive\Desktop\TeamGrid\cleaned_air_quality.parquet"
 )
 
-print("DATA LOADED SUCCESSFULLY")
+print("CLEANED DATA LOADED SUCCESSFULLY")
 
-# ---------------------------------------------------
-# REMOVE DUPLICATES
-# ---------------------------------------------------
 
-df = df.drop_duplicates()
-
-print("DUPLICATES REMOVED")
-
-# ---------------------------------------------------
-# CONVERT DATETIME
-# ---------------------------------------------------
-
-df['datetime'] = pd.to_datetime(df['datetime'])
-
-print("DATETIME CONVERTED")
 
 # ---------------------------------------------------
 # CREATE STATION DIMENSION
