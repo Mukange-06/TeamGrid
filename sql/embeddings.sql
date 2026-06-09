@@ -1,7 +1,5 @@
 -- =====================================================
 -- embeddings.sql
--- OPTIONAL: vector search (pgvector) + full-text search
--- Target: PostgreSQL with the pgvector extension
 -- Covers queries 38 to 42 in query.sql
 -- =====================================================
 --
