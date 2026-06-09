@@ -1,19 +1,12 @@
 -- =====================================================
 -- views.sql
 -- Materialized + regular views for the Air Quality schema
--- Target: PostgreSQL
 -- Designed against the 50 queries in query.sql
 -- =====================================================
 --
 -- Run order: run indexes.sql FIRST, then this file. The materialized
 -- views below pre-compute the full-table aggregations that no index can
 -- avoid (queries 6, 24, 33 scan every row otherwise).
---
--- Conventions:
---   * CREATE MATERIALIZED VIEW IF NOT EXISTS / CREATE OR REPLACE VIEW,
---     so this file is safe to re-run.
---   * Every materialized view gets a UNIQUE index so you can
---     REFRESH ... CONCURRENTLY without locking readers.
 -- =====================================================
 
 
