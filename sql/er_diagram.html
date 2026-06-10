@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Air Quality - ER Diagram</title>
+<style>
+  body{
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f5f6f8;
+    color:#222;
+    margin:0;
+    padding:40px 20px;
+  }
+  h1{ text-align:center; font-size:24px; margin:0 0 30px; }
+
+  .stage{ position:relative; max-width:900px; margin:0 auto; }
+  svg.links{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:visible; }
+
+  .diagram{
+    position:relative; z-index:1;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:60px;
+  }
+
+  .table{
+    background:#fff;
+    border:1px solid #888;
+    border-radius:6px;
+    min-width:200px;
+    box-shadow:0 1px 4px rgba(0,0,0,.15);
+  }
+  .table .title{
+    background:#34495e;
+    color:#fff;
+    font-weight:bold;
+    text-align:center;
+    padding:8px;
+    border-radius:6px 6px 0 0;
+  }
+  .table.fact .title{ background:#c0392b; }
+
+  .table ul{ list-style:none; margin:0; padding:0; }
+  .table li{
+    padding:6px 12px;
+    border-top:1px solid #eee;
+    font-size:14px;
+  }
+  .pk{ font-weight:bold; }
+  .pk::before{ content:"PK "; color:#b8860b; font-size:12px; }
+  .fk::before{ content:"FK "; color:#2980b9; font-size:12px; }
+  .type{ color:#888; font-size:12px; float:right; }
+
+  .rel{
+    text-align:center;
+    margin-top:25px;
+    color:#444;
+    font-size:14px;
+    line-height:1.8;
+  }
+  .rel b{ color:#c0392b; }
+</style>
+</head>
+<body>
+
+  <h1>Air Quality Database - ER Diagram</h1>
+
+  <div class="stage">
+    <svg class="links" id="links" aria-hidden="true">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#2980b9"/>
+        </marker>
+      </defs>
+    </svg>
+
+    <div class="diagram">
+
+      <!-- dim_station -->
+      <div class="table">
+        <div class="title">dim_station</div>
+        <ul>
+          <li class="pk" id="station-pk">station_key <span class="type">INT</span></li>
+          <li>station_id <span class="type">VARCHAR</span></li>
+          <li>station_name <span class="type">TEXT</span></li>
+          <li>station <span class="type">TEXT</span></li>
+          <li>city <span class="type">TEXT</span></li>
+          <li>state <span class="type">TEXT</span></li>
+        </ul>
+      </div>
+
+      <!-- fact_air_quality -->
+      <div class="table fact">
+        <div class="title">fact_air_quality</div>
+        <ul>
+          <li class="pk">measurement_id <span class="type">BIGINT</span></li>
+          <li class="fk" id="fact-station">station_key <span class="type">INT</span></li>
+          <li class="fk" id="fact-date">date_key <span class="type">INT</span></li>
+          <li>pollutant <span class="type">TEXT</span></li>
+          <li>value <span class="type">FLOAT</span></li>
+          <li>at_c <span class="type">FLOAT</span></li>
+          <li>rh_percent <span class="type">FLOAT</span></li>
+          <li>ws_m_s <span class="type">FLOAT</span></li>
+          <li>wd_deg <span class="type">FLOAT</span></li>
+          <li>rf_mm <span class="type">FLOAT</span></li>
+          <li>tot_rf_mm <span class="type">FLOAT</span></li>
+          <li>sr_w_mt2 <span class="type">FLOAT</span></li>
+          <li>bp_mmhg <span class="type">FLOAT</span></li>
+          <li>vws_m_s <span class="type">FLOAT</span></li>
+        </ul>
+      </div>
+
+      <!-- dim_date -->
+      <div class="table">
+        <div class="title">dim_date</div>
+        <ul>
+          <li class="pk" id="date-pk">date_key <span class="type">INT</span></li>
+          <li>datetime <span class="type">TIMESTAMP</span></li>
+          <li>year <span class="type">INT</span></li>
+          <li>month <span class="type">INT</span></li>
+          <li>day <span class="type">INT</span></li>
+          <li>hour <span class="type">INT</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="rel">
+    <div>dim_station (1) &#9472;&#9472;&#9472;&#9472; (many) <b>fact_air_quality</b> &nbsp;on station_key</div>
+    <div>dim_date (1) &#9472;&#9472;&#9472;&#9472; (many) <b>fact_air_quality</b> &nbsp;on date_key</div>
+  </div>
+
+<script>
+(function(){
+  const svg = document.getElementById('links');
+  const pairs = [
+    ['fact-station','station-pk'],
+    ['fact-date','date-pk']
+  ];
+
+  function pt(el){
+    const r = el.getBoundingClientRect();
+    const s = svg.getBoundingClientRect();
+    return {
+      l: r.left - s.left, r: r.right - s.left,
+      y: (r.top + r.bottom)/2 - s.top
+    };
+  }
+
+  function draw(){
+    svg.querySelectorAll('path.link').forEach(n => n.remove());
+
+    pairs.forEach(function(p){
+      const fk = document.getElementById(p[0]);
+      const pk = document.getElementById(p[1]);
+      if(!fk || !pk) return;
+
+      const f = pt(fk), d = pt(pk);
+      const dimOnLeft = d.l < f.l;
+
+      const startX = dimOnLeft ? f.l : f.r;
+      const endX   = dimOnLeft ? d.r : d.l;
+      const bend = Math.abs(endX - startX) * 0.5;
+      const c1 = dimOnLeft ? startX - bend : startX + bend;
+      const c2 = dimOnLeft ? endX + bend   : endX - bend;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('class','link');
+      path.setAttribute('d', 'M ' + startX + ' ' + f.y + ' C ' + c1 + ' ' + f.y + ', ' + c2 + ' ' + d.y + ', ' + endX + ' ' + d.y);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke','#2980b9');
+      path.setAttribute('stroke-width','2');
+      path.setAttribute('marker-end','url(#arrow)');
+      svg.appendChild(path);
+    });
+  }
+
+  window.addEventListener('load', draw);
+  window.addEventListener('resize', draw);
+  setTimeout(draw, 200);
+})();
+</script>
+
+</body>
+</html>
