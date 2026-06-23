@@ -125,15 +125,14 @@ function isDark() {
   return document.documentElement.getAttribute('data-theme') !== 'light';
 }
 
-// Shared chart color tokens based on current theme
 function cc() {
   return {
-    text:          isDark() ? '#e2e8f0'                  : '#0f172a',
-    muted:         isDark() ? '#94a3b8'                  : '#64748b',
-    grid:          isDark() ? 'rgba(255,255,255,0.05)'   : 'rgba(0,0,0,0.06)',
-    tooltipBg:     isDark() ? '#1e293b'                  : '#ffffff',
-    tooltipBorder: isDark() ? 'rgba(255,255,255,0.1)'    : 'rgba(0,0,0,0.1)',
-    surface:       isDark() ? '#0f172a'                  : '#ffffff',
+    text:          isDark() ? '#e2e8f0'                : '#0f172a',
+    muted:         isDark() ? '#94a3b8'                : '#64748b',
+    grid:          isDark() ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
+    tooltipBg:     isDark() ? '#1e293b'                : '#ffffff',
+    tooltipBorder: isDark() ? 'rgba(255,255,255,0.1)'  : 'rgba(0,0,0,0.1)',
+    surface:       isDark() ? '#0f172a'                : '#ffffff',
   };
 }
 
@@ -266,18 +265,18 @@ async function loadRealtimeChart() {
       labels: rows.map(d => d.city),
       datasets: [
         {
-          label: `Avg ${polLabel(pol)}`,
-          data:  rows.map(d => d.avg_value),
+          label:           `Avg ${polLabel(pol)}`,
+          data:            rows.map(d => d.avg_value),
           backgroundColor: '#06b6d4',
-          borderRadius: 4,
-          borderSkipped: false,
+          borderRadius:    4,
+          borderSkipped:   false,
         },
         {
-          label: `Peak ${polLabel(pol)}`,
-          data:  rows.map(d => d.peak_value),
+          label:           `Peak ${polLabel(pol)}`,
+          data:            rows.map(d => d.peak_value),
           backgroundColor: 'rgba(239,68,68,0.75)',
-          borderRadius: 4,
-          borderSkipped: false,
+          borderRadius:    4,
+          borderSkipped:   false,
         },
       ],
     },
@@ -320,8 +319,8 @@ async function loadHourlyChart() {
     data: {
       labels: data.map(d => `${String(d.hour).padStart(2,'0')}:00`),
       datasets: [{
-        label: `${polLabel(pol)} avg`,
-        data:  data.map(d => d.avg_value),
+        label:                `${polLabel(pol)} avg`,
+        data:                 data.map(d => d.avg_value),
         borderColor:          '#06b6d4',
         backgroundColor:      grad,
         tension:              0.4,
@@ -396,15 +395,15 @@ function renderMonthlyChart() {
       .forEach(d => { byMonth[Number(d.month)] = Number(d.avg_value); });
 
     return {
-      label:           String(year),
-      data:            Array.from({ length: 12 }, (_, m) => byMonth[m + 1] ?? null),
-      borderColor:     YEAR_PALETTE[i % YEAR_PALETTE.length],
-      backgroundColor: 'transparent',
-      tension:         0.35,
-      pointRadius:     3,
+      label:            String(year),
+      data:             Array.from({ length: 12 }, (_, m) => byMonth[m + 1] ?? null),
+      borderColor:      YEAR_PALETTE[i % YEAR_PALETTE.length],
+      backgroundColor:  'transparent',
+      tension:          0.35,
+      pointRadius:      3,
       pointHoverRadius: 6,
-      spanGaps:        true,
-      borderWidth:     2,
+      spanGaps:         true,
+      borderWidth:      2,
     };
   });
 
@@ -910,7 +909,6 @@ async function loadScatterPlots() {
   unSkeleton('card-scatter');
   if (!data) { showError('card-scatter'); return; }
 
-  // Sample down for render performance
   const MAX_PTS = 600;
   const sample  = data.length > MAX_PTS
     ? data.filter((_, i) => i % Math.ceil(data.length / MAX_PTS) === 0)
@@ -977,4 +975,129 @@ async function loadScatterPlots() {
 // ═══════════════════════════════════════════════════════════════
 function updateURL() {
   const p = new URLSearchParams();
-  if (state.pollutant !== 'pm25') p.
+  if (state.pollutant !== 'pm25') p.set('pollutant', state.pollutant);
+  if (state.city      !== 'all')  p.set('city',      state.city);
+  const q = p.toString();
+  history.replaceState(null, '', q ? `?${q}` : location.pathname);
+}
+
+function readURL() {
+  const p = new URLSearchParams(location.search);
+  if (p.has('pollutant')) state.pollutant = p.get('pollutant');
+  if (p.has('city'))      state.city      = p.get('city');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CITY DROPDOWN POPULATION
+// ═══════════════════════════════════════════════════════════════
+function populateCityDropdown(stationData) {
+  const cities = [...new Set(stationData.map(d => d.city).filter(Boolean))].sort();
+  const sel    = document.getElementById('city-select');
+
+  const existing = new Set([...sel.options].map(o => o.value));
+  cities.forEach(city => {
+    if (!existing.has(city)) {
+      const opt       = document.createElement('option');
+      opt.value       = city;
+      opt.textContent = city;
+      sel.appendChild(opt);
+    }
+  });
+
+  sel.value = state.city;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POLLUTANT-SPECIFIC RE-FETCH GROUP
+// ═══════════════════════════════════════════════════════════════
+async function reloadPollutantCharts() {
+  await Promise.all([
+    loadRealtimeChart(),
+    loadHourlyChart(),
+    loadMonthlyTrend(),
+    loadDailySparkline(),
+    loadScatterPlots(),
+    loadCityComparison(),
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILTER HANDLERS
+// ═══════════════════════════════════════════════════════════════
+function bindFilters() {
+  document.getElementById('pollutant-select').addEventListener('change', async function () {
+    state.pollutant = this.value;
+    updateURL();
+    await reloadPollutantCharts();
+  });
+
+  document.getElementById('city-select').addEventListener('change', function () {
+    state.city = this.value;
+    updateURL();
+  });
+
+  document.getElementById('station-search').addEventListener('input', function () {
+    state.stationSearch = this.value.trim();
+    state.stationPage   = 1;
+    renderStationTable();
+  });
+
+  // Year range sliders
+  const slMin = document.getElementById('year-min');
+  const slMax = document.getElementById('year-max');
+  const disp  = document.getElementById('year-range-display');
+
+  function onSlider() {
+    let yMin = Number(slMin.value);
+    let yMax = Number(slMax.value);
+    if (yMin > yMax) {
+      if (this === slMin) yMax = yMin;
+      else                yMin = yMax;
+      slMin.value = yMin;
+      slMax.value = yMax;
+    }
+    state.yearMin = yMin;
+    state.yearMax = yMax;
+    disp.textContent = `${yMin} – ${yMax}`;
+    renderMonthlyChart();
+  }
+
+  slMin.addEventListener('input', onSlider);
+  slMax.addEventListener('input', onSlider);
+
+  // Theme toggle
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const html      = document.documentElement;
+    const isDarkNow = html.getAttribute('data-theme') !== 'light';
+    html.setAttribute('data-theme', isDarkNow ? 'light' : 'dark');
+    document.querySelector('.theme-icon').textContent = isDarkNow ? '☀️' : '🌙';
+    // Rebuild all charts so colours refresh
+    reloadPollutantCharts();
+    loadPollutantStats();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+async function init() {
+  // 1. Read URL state first
+  readURL();
+
+  // 2. Sync selects to state
+  const polSel = document.getElementById('pollutant-select');
+  polSel.value = state.pollutant;
+
+  // 3. Bind all filters
+  bindFilters();
+
+  // 4. Load everything in parallel where possible
+  await Promise.all([
+    loadKPICards(),
+    loadStationTable(),    // also loads health donut + populates city dropdown
+    loadPollutantStats(),  // also loads correlation heatmap
+    reloadPollutantCharts(),
+  ]);
+}
+
+document.addEventListener('DOMContentLoaded', init);
