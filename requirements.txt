@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pandas
+polars
+numpy
+pyarrow
+aiofiles

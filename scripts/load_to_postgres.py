@@ -6,10 +6,10 @@ from sqlalchemy import create_engine
 # ---------------------------------------------------
 
 USERNAME = "postgres"
-PASSWORD = "jesuslovesme05"
+PASSWORD = "Emm@nuel2006"
 HOST = "localhost"
 PORT = "5432"
-DATABASE = "teamgrid"
+DATABASE = "teamgrid1"  # Emmanuel's database name
 
 engine = create_engine(
     f"postgresql+psycopg2://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}"
