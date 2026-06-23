@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeamGrid AQ — Air Quality Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── TOPBAR ─────────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" width="26" height="26">
+        <path d="M3 7c0 0 3.5-3 9-3s9 3 9 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M3 12c0 0 3.5-3 9-3s9 3 9 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M3 17c0 0 3.5-3 9-3s9 3 9 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-name">TeamGrid <span class="brand-accent">AQ</span></span>
+    </div>
+    <div class="topbar-controls">
+      <div class="control-group">
+        <label for="pollutant-select">Pollutant</label>
+        <select id="pollutant-select" class="control-select">
+          <option value="pm25">PM2.5</option>
+          <option value="pm10">PM10</option>
+          <option value="no2">NO₂</option>
+          <option value="ozone">Ozone</option>
+          <option value="co">CO</option>
+          <option value="so2">SO₂</option>
+          <option value="nh3">NH₃</option>
+          <option value="benzene">Benzene</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="city-select">City</label>
+        <select id="city-select" class="control-select">
+          <option value="all">All Cities</option>
+        </select>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-icon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── DASHBOARD ──────────────────────────────────────────── -->
+  <main class="dashboard">
+
+    <!-- ROW 1 · KPI CARDS -->
+    <section class="kpi-row">
+      <div class="kpi-card skeleton" id="kpi-stations">
+        <div class="kpi-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+            <path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">Total Stations</div>
+          <div class="kpi-value" id="val-stations">—</div>
+        </div>
+      </div>
+      <div class="kpi-card skeleton" id="kpi-readings">
+        <div class="kpi-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">Total Readings</div>
+          <div class="kpi-value" id="val-readings">—</div>
+        </div>
+      </div>
+      <div class="kpi-card skeleton" id="kpi-cities">
+        <div class="kpi-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">Cities Monitored</div>
+          <div class="kpi-value" id="val-cities">—</div>
+        </div>
+      </div>
+      <div class="kpi-card skeleton" id="kpi-hazardous">
+        <div class="kpi-icon-wrap kpi-icon-haz">
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="2"/>
+            <line x1="12" y1="9" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="17" r="0.5" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">Hazardous Stations</div>
+          <div class="kpi-value" id="val-hazardous">—</div>
+        </div>
+      </div>
+      <div class="kpi-card skeleton" id="kpi-unhealthy">
+        <div class="kpi-icon-wrap kpi-icon-unh">
+          <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M8 15s1.5 2 4 2 4-2 4-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="9" cy="9" r="0.5" fill="currentColor" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="15" cy="9" r="0.5" fill="currentColor" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-label">Unhealthy Stations</div>
+          <div class="kpi-value" id="val-unhealthy">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROW 2 · REALTIME + HOURLY -->
+    <section class="row-split split-60-40">
+      <div class="card skeleton" id="card-realtime">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Real-time · Last 24 h</h2>
+            <p class="card-sub">Top 8 cities by average pollution</p>
+          </div>
+        </div>
+        <div class="chart-wrap h-300"><canvas id="chart-realtime"></canvas></div>
+      </div>
+      <div class="card skeleton" id="card-hourly">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Hourly Profile</h2>
+            <p class="card-sub">Avg pollution by hour-of-day (0–23)</p>
+          </div>
+        </div>
+        <div class="chart-wrap h-300"><canvas id="chart-hourly"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ROW 3 · MONTHLY TREND + DAILY SPARKLINE -->
+    <section class="row-split split-65-35">
+      <div class="card skeleton" id="card-monthly">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Monthly Trend</h2>
+            <p class="card-sub">Avg per month · one line per year · scroll to zoom</p>
+          </div>
+        </div>
+        <div class="chart-wrap h-280"><canvas id="chart-monthly"></canvas></div>
+        <div class="year-range-row">
+          <span class="range-label">From</span>
+          <input type="range" id="year-min" class="range-slider" min="2015" max="2024" value="2018" step="1" />
+          <span class="range-label">To</span>
+          <input type="range" id="year-max" class="range-slider" min="2015" max="2024" value="2024" step="1" />
+          <span class="range-display" id="year-range-display">2018 – 2024</span>
+        </div>
+      </div>
+      <div class="card skeleton" id="card-daily">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Daily Trend</h2>
+            <p class="card-sub">Last 30 days · bars = avg · line = peak</p>
+          </div>
+        </div>
+        <div class="chart-wrap h-280"><canvas id="chart-daily"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ROW 4 · STATION TABLE + HEALTH DONUT -->
+    <section class="row-split split-70-30">
+      <div class="card skeleton" id="card-stations">
+        <div class="card-header">
+          <h2 class="card-title">Station Rankings</h2>
+          <input type="search" id="station-search" class="search-input" placeholder="Search station or city…" />
+        </div>
+        <div class="table-scroll" id="station-table-wrap"></div>
+        <div class="pagination" id="station-pagination"></div>
+      </div>
+      <div class="card skeleton" id="card-health-donut">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Health Status</h2>
+            <p class="card-sub">Station breakdown by category</p>
+          </div>
+        </div>
+        <div class="chart-wrap h-300"><canvas id="chart-health-donut"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ROW 5 · POLLUTANT STATS + CORRELATION HEATMAP -->
+    <section class="row-split split-55-45">
+      <div class="card skeleton" id="card-pollutant-stats">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Pollutant Statistics</h2>
+            <p class="card-sub">Click column headers to sort</p>
+          </div>
+        </div>
+        <div class="table-scroll" id="pollutant-stats-wrap"></div>
+      </div>
+      <div class="card skeleton" id="card-heatmap">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Weather Correlation</h2>
+            <p class="card-sub">Pearson r · blue = negative · red = positive</p>
+          </div>
+        </div>
+        <div id="heatmap-wrap"></div>
+      </div>
+    </section>
+
+    <!-- ROW 6 · CITY COMPARISON + SCATTER PLOTS -->
+    <section class="row-split split-50-50">
+      <div class="card skeleton" id="card-city-compare">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">City Comparison</h2>
+            <p class="card-sub">Top 10 cities · coloured by health threshold</p>
+          </div>
+        </div>
+        <div class="chart-wrap h-320"><canvas id="chart-city-compare"></canvas></div>
+      </div>
+      <div class="card skeleton" id="card-scatter">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Weather vs Pollution</h2>
+            <p class="card-sub">Scatter plots for selected pollutant</p>
+          </div>
+        </div>
+        <div class="scatter-grid">
+          <div>
+            <p class="scatter-label">Temperature (°C) vs Pollution</p>
+            <div class="chart-wrap h-150"><canvas id="chart-scatter-temp"></canvas></div>
+          </div>
+          <div>
+            <p class="scatter-label">Wind Speed (m/s) vs Pollution</p>
+            <div class="chart-wrap h-150"><canvas id="chart-scatter-wind"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    TeamGrid AQ &middot; Air Quality Analytics Dashboard &middot; <code>air_quality_db</code>
+  </footer>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
